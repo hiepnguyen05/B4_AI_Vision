@@ -1,0 +1,506 @@
+openapi: 3.0.3
+info:
+  title: AI Vision Service API
+  description: |
+    AI Vision Service for Campus Security System - Product B4
+    
+    This service provides AI-powered image analysis capabilities for the campus security system.
+    It receives images from Camera Stream Service (B2), performs object detection using AI inference,
+    and communicates results to Access Gate (B3), Analytics (B5), Core Business (B6), and 
+    Notification (B7) services.
+    
+    **Detected Objects:**
+    - Person
+    - Vehicle
+    - Helmet
+    - Face
+    
+    **Key Features:**
+    - Real-time image analysis
+    - AI-powered object detection
+    - Confidence scoring
+    - Processing logs and statistics
+    - Integration with multiple services
+  version: 1.0.0
+  contact:
+    name: Group B4
+    email: groupb4@campus.edu
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8084/api
+    description: Development Server
+  - url: http://ai-vision-service:8084/api
+    description: Docker Server
+
+tags:
+  - name: AI Vision
+    description: Image analysis and object detection endpoints
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  /vision/analyze:
+    post:
+      tags:
+        - AI Vision
+      summary: Analyze image from Camera Stream Service
+      description: |
+        Receives image URL from Camera Stream Service (B2), performs AI analysis, 
+        and returns detected objects with confidence scores.
+      operationId: analyzeImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeImageRequest'
+            examples:
+              person_detection:
+                summary: Person detection from CAM001
+                value:
+                  cameraId: "CAM001"
+                  imageUrl: "https://sample.com/images/person.jpg"
+                  timestamp: "2026-01-01T10:00:00"
+              vehicle_detection:
+                summary: Vehicle detection from CAM002
+                value:
+                  cameraId: "CAM002"
+                  imageUrl: "https://sample.com/images/vehicle.jpg"
+                  timestamp: "2026-01-01T10:05:00"
+      responses:
+        '200':
+          description: Image analyzed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeImageResponse'
+              examples:
+                success:
+                  value:
+                    analysisId: 1
+                    detectedObject: "Person"
+                    confidence: 0.94
+                    status: "COMPLETED"
+                    processingTime: 150
+                    message: "Image analyzed successfully"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /vision/upload:
+    post:
+      tags:
+        - AI Vision
+      summary: Upload and analyze image
+      description: Upload an image directly and perform AI analysis
+      operationId: uploadImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadImageRequest'
+      responses:
+        '201':
+          description: Image uploaded and analyzed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeImageResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /vision/results:
+    get:
+      tags:
+        - AI Vision
+      summary: Get all analysis results
+      description: Retrieve all image analysis results from the database
+      operationId: getAllResults
+      responses:
+        '200':
+          description: Results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiResultResponse'
+
+  /vision/results/{id}:
+    get:
+      tags:
+        - AI Vision
+      summary: Get analysis result by ID
+      description: Retrieve a specific analysis result by its ID
+      operationId: getResultById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Analysis result ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Result retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiResultResponse'
+        '404':
+          description: Result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - AI Vision
+      summary: Delete analysis result
+      description: Delete a specific analysis result by its ID
+      operationId: deleteResult
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Analysis result ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Result deleted successfully
+        '404':
+          description: Result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /vision/statistics:
+    get:
+      tags:
+        - AI Vision
+      summary: Get analysis statistics
+      description: Retrieve statistical information about all analyses
+      operationId: getStatistics
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the service is running
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "UP"
+                  service:
+                    type: string
+                    example: "AI Vision Service"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  schemas:
+    AnalyzeImageRequest:
+      type: object
+      required:
+        - cameraId
+        - imageUrl
+        - timestamp
+      properties:
+        cameraId:
+          type: string
+          pattern: '^CAM[0-9]{3,}$'
+          description: Camera ID in format CAM001, CAM002, etc.
+          example: "CAM001"
+        imageUrl:
+          type: string
+          format: uri
+          pattern: '^https?://.*\.(jpg|jpeg|png|gif)$'
+          description: Image URL with jpg, jpeg, png, or gif extension
+          example: "https://sample.com/images/person.jpg"
+        timestamp:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$'
+          description: Timestamp in format yyyy-MM-ddTHH:mm:ss
+          example: "2026-01-01T10:00:00"
+
+    AnalyzeImageResponse:
+      type: object
+      properties:
+        analysisId:
+          type: integer
+          format: int64
+          description: Unique analysis ID
+          example: 1
+        detectedObject:
+          type: string
+          description: Detected object type
+          enum: [Person, Vehicle, Helmet, Face]
+          example: "Person"
+        confidence:
+          type: number
+          format: double
+          minimum: 0.0
+          maximum: 1.0
+          description: Detection confidence score (0.0 to 1.0)
+          example: 0.94
+        status:
+          type: string
+          description: Analysis status
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+          example: "COMPLETED"
+        processingTime:
+          type: integer
+          format: int64
+          description: Processing time in milliseconds
+          example: 150
+        message:
+          type: string
+          description: Response message
+          example: "Image analyzed successfully"
+
+    UploadImageRequest:
+      type: object
+      required:
+        - imageName
+        - imageUrl
+      properties:
+        imageName:
+          type: string
+          description: Image file name
+          example: "person_detected.jpg"
+        imageUrl:
+          type: string
+          format: uri
+          description: Image URL
+          example: "https://sample.com/images/person_detected.jpg"
+        cameraId:
+          type: string
+          pattern: '^CAM[0-9]{3,}$'
+          description: Camera ID (optional)
+          example: "CAM001"
+
+    AiResultResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        imageName:
+          type: string
+          example: "person_detected.jpg"
+        imageUrl:
+          type: string
+          format: uri
+          example: "https://sample.com/images/person_detected.jpg"
+        cameraId:
+          type: string
+          example: "CAM001"
+        detectedObject:
+          type: string
+          example: "Person"
+        confidence:
+          type: number
+          format: double
+          example: 0.94
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+          example: "COMPLETED"
+        processingTime:
+          type: integer
+          format: int64
+          example: 150
+        additionalInfo:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-01T10:00:00"
+        analyzedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-01-01T10:00:01"
+
+    StatisticsResponse:
+      type: object
+      properties:
+        totalAnalyses:
+          type: integer
+          format: int64
+          example: 100
+        completedAnalyses:
+          type: integer
+          format: int64
+          example: 95
+        failedAnalyses:
+          type: integer
+          format: int64
+          example: 2
+        pendingAnalyses:
+          type: integer
+          format: int64
+          example: 3
+        averageConfidence:
+          type: number
+          format: double
+          example: 0.89
+        averageProcessingTime:
+          type: number
+          format: double
+          example: 145.5
+        detectedObjectCounts:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          example:
+            Person: 50
+            Vehicle: 30
+            Helmet: 15
+            Face: 5
+        message:
+          type: string
+          example: "Statistics retrieved successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "Invalid input parameters"
+        details:
+          type: array
+          items:
+            type: string
+          example: ["cameraId: Camera ID must follow format CAM001, CAM002, etc."]
+        path:
+          type: string
+          example: "/api/vision/analyze"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-01T10:00:00"
+
+    # External Service Communication DTOs
+    AccessEvaluateRequest:
+      type: object
+      description: Request sent to Access Gate Service (B3)
+      properties:
+        analysisId:
+          type: integer
+          format: int64
+        personDetected:
+          type: boolean
+        confidence:
+          type: number
+          format: double
+        cameraId:
+          type: string
+        timestamp:
+          type: string
+
+    AnalyticsEventRequest:
+      type: object
+      description: Request sent to Analytics Service (B5)
+      properties:
+        analysisId:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        confidence:
+          type: number
+          format: double
+        detectedObject:
+          type: string
+        cameraId:
+          type: string
+        timestamp:
+          type: string
+
+    CoreEventRequest:
+      type: object
+      description: Request sent to Core Business Service (B6)
+      properties:
+        analysisId:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        status:
+          type: string
+        detectedObject:
+          type: string
+        confidence:
+          type: number
+          format: double
+        timestamp:
+          type: string
+
+    NotificationRequest:
+      type: object
+      description: Request sent to Notification Service (B7)
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        analysisId:
+          type: integer
+          format: int64
+        cameraId:
+          type: string

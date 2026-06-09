@@ -1,0 +1,202 @@
+{
+  "info": {
+    "name": "AI Vision Service - Product B4",
+    "description": "Complete API collection for AI Vision Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8084/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Check if the service is running"
+      },
+      "response": []
+    },
+    {
+      "name": "Analyze Image from Camera (B2)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cameraId\": \"CAM001\",\n  \"imageUrl\": \"https://sample.com/images/person.jpg\",\n  \"timestamp\": \"2026-01-01T10:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/vision/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "analyze"]
+        },
+        "description": "Analyze image from Camera Stream Service (B2)"
+      },
+      "response": []
+    },
+    {
+      "name": "Analyze Vehicle Detection",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cameraId\": \"CAM002\",\n  \"imageUrl\": \"https://sample.com/images/vehicle.jpg\",\n  \"timestamp\": \"2026-01-01T10:05:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/vision/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "analyze"]
+        },
+        "description": "Analyze image for vehicle detection"
+      },
+      "response": []
+    },
+    {
+      "name": "Upload and Analyze Image",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"imageName\": \"helmet_check.jpg\",\n  \"imageUrl\": \"https://sample.com/images/helmet_check.jpg\",\n  \"cameraId\": \"CAM003\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/vision/upload",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "upload"]
+        },
+        "description": "Upload and analyze image directly"
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Analysis Results",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/vision/results",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "results"]
+        },
+        "description": "Retrieve all analysis results"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Result by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/vision/results/1",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "results", "1"]
+        },
+        "description": "Retrieve a specific analysis result by ID"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Statistics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/vision/statistics",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "statistics"]
+        },
+        "description": "Get analysis statistics"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Result",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/vision/results/1",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "results", "1"]
+        },
+        "description": "Delete a specific analysis result"
+      },
+      "response": []
+    },
+    {
+      "name": "Test Invalid Request - Missing Camera ID",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"imageUrl\": \"https://sample.com/images/test.jpg\",\n  \"timestamp\": \"2026-01-01T10:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/vision/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "analyze"]
+        },
+        "description": "Test validation error - missing camera ID"
+      },
+      "response": []
+    },
+    {
+      "name": "Test Invalid Request - Wrong Camera ID Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cameraId\": \"INVALID\",\n  \"imageUrl\": \"https://sample.com/images/test.jpg\",\n  \"timestamp\": \"2026-01-01T10:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/vision/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["vision", "analyze"]
+        },
+        "description": "Test validation error - wrong camera ID format"
+      },
+      "response": []
+    }
+  ]
+}

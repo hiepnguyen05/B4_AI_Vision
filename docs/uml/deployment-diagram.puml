@@ -1,0 +1,82 @@
+@startuml
+title AI Vision Service - Deployment Diagram
+
+node "Docker Host" {
+  
+  node "ai-vision-network" as network {
+    
+    node "ai-vision-service container" as appContainer {
+      artifact "AI Vision Service\n(Spring Boot)" as app {
+        component "Port 8084" as port8084
+      }
+    }
+    
+    node "ai-vision-postgres container" as dbContainer {
+      database "PostgreSQL 15" as db {
+        component "Port 5432" as port5432
+        storage "postgres_data volume" as volume
+      }
+    }
+  }
+}
+
+cloud "External Services Network" {
+  node "Camera Stream Service" as b2 {
+    component "Port 8082" as port8082
+  }
+  
+  node "Access Gate Service" as b3 {
+    component "Port 8083" as port8083
+  }
+  
+  node "Analytics Service" as b5 {
+    component "Port 8085" as port8085
+  }
+  
+  node "Core Business Service" as b6 {
+    component "Port 8086" as port8086
+  }
+  
+  node "Notification Service" as b7 {
+    component "Port 8087" as port8087
+  }
+}
+
+actor "Developer/Admin" as user
+
+user --> port8084 : HTTP\n(localhost:8084)
+b2 --> port8084 : POST /analyze
+appContainer --> port5432 : JDBC
+appContainer --> b3 : POST /evaluate
+appContainer --> b5 : POST /events
+appContainer --> b6 : POST /events
+appContainer --> b7 : POST /send
+
+note right of appContainer
+  Environment Variables:
+  - DB_HOST=postgres
+  - DB_PORT=5432
+  - DB_NAME=ai_vision_db
+  - DB_USERNAME=postgres
+  - DB_PASSWORD=postgres
+  - SPRING_PROFILES_ACTIVE=prod
+end note
+
+note right of dbContainer
+  Volumes:
+  - postgres_data
+  - init.sql
+  
+  Health Check:
+  pg_isready -U postgres
+end note
+
+note bottom of network
+  Docker Compose Configuration:
+  - Bridge network
+  - Service dependencies
+  - Health checks
+  - Auto-restart policy
+end note
+
+@enduml

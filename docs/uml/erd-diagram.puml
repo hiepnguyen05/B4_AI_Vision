@@ -1,0 +1,65 @@
+@startuml
+title AI Vision Service - Entity Relationship Diagram (ERD)
+
+entity "ai_results" {
+  * id : BIGSERIAL <<PK>>
+  --
+  * image_name : VARCHAR(255)
+  * image_url : VARCHAR(1024)
+  camera_id : VARCHAR(50)
+  * detected_object : VARCHAR(100)
+  * confidence : DOUBLE PRECISION
+  * status : VARCHAR(20)
+  processing_time : BIGINT
+  additional_info : TEXT
+  * created_at : TIMESTAMP
+  analyzed_at : TIMESTAMP
+  --
+  Indexes:
+  - idx_image_name
+  - idx_status
+  - idx_created_at
+}
+
+entity "processing_logs" {
+  * id : BIGSERIAL <<PK>>
+  --
+  * request_id : VARCHAR(100)
+  * action : VARCHAR(100)
+  * status : VARCHAR(20)
+  message : TEXT
+  error_details : TEXT
+  * created_at : TIMESTAMP
+  --
+  Indexes:
+  - idx_request_id
+  - idx_processing_created_at
+}
+
+note right of ai_results
+  Status values:
+  - PENDING
+  - PROCESSING
+  - COMPLETED
+  - FAILED
+  
+  Detected objects:
+  - Person
+  - Vehicle
+  - Helmet
+  - Face
+end note
+
+note right of processing_logs
+  Status values:
+  - STARTED
+  - IN_PROGRESS
+  - SUCCESS
+  - FAILED
+  - RETRY
+  
+  Used for tracking
+  processing history
+end note
+
+@enduml

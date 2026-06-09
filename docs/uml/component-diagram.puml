@@ -1,0 +1,91 @@
+@startuml
+title AI Vision Service - Component Diagram
+
+!define RECTANGLE class
+
+skinparam component {
+  BackgroundColor<<external>> LightBlue
+  BackgroundColor<<internal>> LightGreen
+  BackgroundColor<<database>> LightYellow
+}
+
+package "AI Vision Service (B4)" {
+  
+  [API Gateway Layer] <<internal>>
+  
+  package "Controllers" {
+    [AiVisionController] <<internal>>
+    [HealthController] <<internal>>
+  }
+  
+  package "Services" {
+    [AiVisionService] <<internal>>
+    [ExternalServiceClient] <<internal>>
+  }
+  
+  package "Repositories" {
+    [AiResultRepository] <<internal>>
+    [ProcessingLogRepository] <<internal>>
+  }
+  
+  package "Entities" {
+    [AiResult] <<internal>>
+    [ProcessingLog] <<internal>>
+  }
+  
+  package "DTOs" {
+    [Request DTOs] <<internal>>
+    [Response DTOs] <<internal>>
+  }
+  
+  package "Exception Handling" {
+    [GlobalExceptionHandler] <<internal>>
+  }
+  
+  package "Configuration" {
+    [OpenAPI Config] <<internal>>
+    [Application Config] <<internal>>
+  }
+}
+
+database "PostgreSQL" <<database>> {
+  [ai_results table]
+  [processing_logs table]
+}
+
+cloud "External Services" {
+  [Camera Stream (B2)] <<external>>
+  [Access Gate (B3)] <<external>>
+  [Analytics (B5)] <<external>>
+  [Core Business (B6)] <<external>>
+  [Notification (B7)] <<external>>
+}
+
+[Camera Stream (B2)] --> [API Gateway Layer] : POST /analyze
+[API Gateway Layer] --> [AiVisionController]
+[API Gateway Layer] --> [HealthController]
+
+[AiVisionController] --> [AiVisionService]
+[AiVisionService] --> [AiResultRepository]
+[AiVisionService] --> [ProcessingLogRepository]
+[AiVisionService] --> [ExternalServiceClient]
+
+[AiResultRepository] --> [ai_results table]
+[ProcessingLogRepository] --> [processing_logs table]
+
+[AiResultRepository] ..> [AiResult] : uses
+[ProcessingLogRepository] ..> [ProcessingLog] : uses
+
+[AiVisionController] ..> [Request DTOs] : uses
+[AiVisionController] ..> [Response DTOs] : uses
+[AiVisionService] ..> [Request DTOs] : uses
+[AiVisionService] ..> [Response DTOs] : uses
+
+[AiVisionController] --> [GlobalExceptionHandler] : handles errors
+
+[ExternalServiceClient] --> [Access Gate (B3)] : notify
+[ExternalServiceClient] --> [Analytics (B5)] : notify
+[ExternalServiceClient] --> [Core Business (B6)] : notify
+[ExternalServiceClient] --> [Notification (B7)] : notify
+
+@enduml

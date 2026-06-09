@@ -1,0 +1,45 @@
+@startuml
+title AI Vision Service - Use Case Diagram
+
+left to right direction
+
+actor "Camera Stream\nService (B2)" as CameraService
+actor "Access Gate\nService (B3)" as AccessService
+actor "Analytics\nService (B5)" as AnalyticsService
+actor "Core Business\nService (B6)" as CoreService
+actor "Notification\nService (B7)" as NotificationService
+actor "System Admin" as Admin
+
+rectangle "AI Vision Service (B4)" {
+  usecase "Analyze Image" as UC1
+  usecase "Upload Image" as UC2
+  usecase "Get Analysis Results" as UC3
+  usecase "Get Result by ID" as UC4
+  usecase "Delete Result" as UC5
+  usecase "Get Statistics" as UC6
+  usecase "Health Check" as UC7
+  usecase "Notify Access Gate" as UC8
+  usecase "Notify Analytics" as UC9
+  usecase "Notify Core Business" as UC10
+  usecase "Send Notification" as UC11
+}
+
+CameraService --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+
+UC1 ..> UC8 : <<include>>
+UC1 ..> UC9 : <<include>>
+UC1 ..> UC10 : <<include>>
+UC1 ..> UC11 : <<include>>
+
+UC8 --> AccessService
+UC9 --> AnalyticsService
+UC10 --> CoreService
+UC11 --> NotificationService
+
+@enduml

@@ -1,0 +1,176 @@
+@startuml
+title AI Vision Service - Class Diagram
+
+package "Controller Layer" {
+  class AiVisionController {
+    - aiVisionService: AiVisionService
+    + analyzeImage(request): ResponseEntity
+    + uploadImage(request): ResponseEntity
+    + getAllResults(): ResponseEntity
+    + getResultById(id): ResponseEntity
+    + deleteResult(id): ResponseEntity
+    + getStatistics(): ResponseEntity
+  }
+  
+  class HealthController {
+    + health(): ResponseEntity
+  }
+}
+
+package "Service Layer" {
+  class AiVisionService {
+    - aiResultRepository: AiResultRepository
+    - processingLogRepository: ProcessingLogRepository
+    - aiResultMapper: AiResultMapper
+    - externalServiceClient: ExternalServiceClient
+    + analyzeImage(request): AnalyzeImageResponse
+    + uploadAndAnalyze(request): AnalyzeImageResponse
+    + getAllResults(): List<AiResultResponse>
+    + getResultById(id): AiResultResponse
+    + deleteResult(id): void
+    + getStatistics(): StatisticsResponse
+    - performAiInference(imageUrl): Map
+    - notifyOtherServices(aiResult): void
+  }
+  
+  class ExternalServiceClient {
+    - restTemplate: RestTemplate
+    + notifyAccessGate(aiResult): void
+    + notifyAnalytics(aiResult): void
+    + notifyCoreService(aiResult): void
+    + notifyNotificationService(aiResult): void
+  }
+}
+
+package "Repository Layer" {
+  interface AiResultRepository {
+    + findByStatus(status): List<AiResult>
+    + findByCameraId(cameraId): List<AiResult>
+    + findByDetectedObject(object): List<AiResult>
+    + countByStatus(status): Long
+    + averageConfidence(): Double
+    + averageProcessingTime(): Double
+  }
+  
+  interface ProcessingLogRepository {
+    + findByRequestId(requestId): List<ProcessingLog>
+    + findByStatus(status): List<ProcessingLog>
+    + countByStatus(status): Long
+  }
+}
+
+package "Entity Layer" {
+  class AiResult {
+    - id: Long
+    - imageName: String
+    - imageUrl: String
+    - cameraId: String
+    - detectedObject: String
+    - confidence: Double
+    - status: AnalysisStatus
+    - processingTime: Long
+    - additionalInfo: String
+    - createdAt: LocalDateTime
+    - analyzedAt: LocalDateTime
+  }
+  
+  enum AnalysisStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    FAILED
+  }
+  
+  class ProcessingLog {
+    - id: Long
+    - requestId: String
+    - action: String
+    - status: LogStatus
+    - message: String
+    - errorDetails: String
+    - createdAt: LocalDateTime
+  }
+  
+  enum LogStatus {
+    STARTED
+    IN_PROGRESS
+    SUCCESS
+    FAILED
+    RETRY
+  }
+}
+
+package "DTO Layer" {
+  class AnalyzeImageRequest {
+    - cameraId: String
+    - imageUrl: String
+    - timestamp: String
+  }
+  
+  class AnalyzeImageResponse {
+    - analysisId: Long
+    - detectedObject: String
+    - confidence: Double
+    - status: String
+    - processingTime: Long
+    - message: String
+  }
+  
+  class AiResultResponse {
+    - id: Long
+    - imageName: String
+    - imageUrl: String
+    - cameraId: String
+    - detectedObject: String
+    - confidence: Double
+    - status: String
+    - processingTime: Long
+    - createdAt: LocalDateTime
+    - analyzedAt: LocalDateTime
+  }
+  
+  class StatisticsResponse {
+    - totalAnalyses: Long
+    - completedAnalyses: Long
+    - failedAnalyses: Long
+    - pendingAnalyses: Long
+    - averageConfidence: Double
+    - averageProcessingTime: Double
+    - detectedObjectCounts: Map
+    - message: String
+  }
+}
+
+package "Mapper Layer" {
+  class AiResultMapper {
+    + toResponse(entity): AiResultResponse
+  }
+}
+
+package "Exception Layer" {
+  class GlobalExceptionHandler {
+    + handleResourceNotFoundException(): ResponseEntity
+    + handleValidationException(): ResponseEntity
+    + handleGlobalException(): ResponseEntity
+  }
+  
+  class ResourceNotFoundException {
+    + ResourceNotFoundException(message)
+  }
+}
+
+' Relationships
+AiVisionController --> AiVisionService
+AiVisionService --> AiResultRepository
+AiVisionService --> ProcessingLogRepository
+AiVisionService --> AiResultMapper
+AiVisionService --> ExternalServiceClient
+AiResultRepository --> AiResult
+ProcessingLogRepository --> ProcessingLog
+AiResult --> AnalysisStatus
+ProcessingLog --> LogStatus
+AiResultMapper --> AiResult
+AiResultMapper --> AiResultResponse
+GlobalExceptionHandler --> ResourceNotFoundException
+
+@enduml

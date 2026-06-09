@@ -1,0 +1,75 @@
+@startuml
+title AI Vision Service - Analyze Image Sequence Diagram
+
+actor "Camera Stream\nService (B2)" as Camera
+participant "AiVisionController" as Controller
+participant "AiVisionService" as Service
+database "PostgreSQL" as DB
+participant "ExternalServiceClient" as Client
+actor "Access Gate (B3)" as Access
+actor "Analytics (B5)" as Analytics
+actor "Core (B6)" as Core
+actor "Notification (B7)" as Notification
+
+Camera -> Controller: POST /vision/analyze
+activate Controller
+
+Controller -> Controller: Validate Request
+Controller -> Service: analyzeImage(request)
+activate Service
+
+Service -> DB: Save AiResult (PROCESSING)
+activate DB
+DB --> Service: AiResult saved
+deactivate DB
+
+Service -> Service: performAiInference(imageUrl)
+note right: Simulate AI processing\nDetect object\nGenerate confidence score
+
+Service -> DB: Update AiResult (COMPLETED)
+activate DB
+DB --> Service: AiResult updated
+deactivate DB
+
+Service -> DB: Save ProcessingLog
+activate DB
+DB --> Service: Log saved
+deactivate DB
+
+Service -> Client: notifyOtherServices(aiResult)
+activate Client
+
+alt Person Detected
+  Client -> Access: POST /api/access/evaluate
+  activate Access
+  Access --> Client: Response
+  deactivate Access
+end
+
+Client -> Analytics: POST /api/analytics/events
+activate Analytics
+Analytics --> Client: Response
+deactivate Analytics
+
+Client -> Core: POST /api/core/events
+activate Core
+Core --> Client: Response
+deactivate Core
+
+alt High Confidence (>= 0.90)
+  Client -> Notification: POST /api/notification/send
+  activate Notification
+  Notification --> Client: Response
+  deactivate Notification
+end
+
+Client --> Service: Notifications sent
+deactivate Client
+
+Service --> Controller: AnalyzeImageResponse
+deactivate Service
+
+Controller --> Camera: 200 OK (Response)
+deactivate Controller
+
+@enduml
